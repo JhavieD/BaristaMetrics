@@ -99,8 +99,8 @@ BEGIN
         VALUES (v_branch, v_item_id, 'deduction', v_qty, v_staff, v_date + ((v_day * 37 % 60) || ' minutes')::interval);
 
         -- Deliveries every 5-7 days (8-15 packs)
-        IF v_day > 0 AND v_day % (5 + (v_item_name::bit(8)::int % 3)) = 0 THEN
-          v_qty := 8.0 + (v_item_name::bit(8)::int % 8);
+        IF v_day > 0 AND v_day % (5 + (length(v_item_name) % 3)) = 0 THEN
+          v_qty := 8.0 + (length(v_item_name) % 8);
           INSERT INTO daily_logs (branch_id, item_id, log_type, quantity_opened, logged_by, created_at)
           VALUES (v_branch, v_item_id, 'delivery', v_qty, 'jana@admin.com', v_date + '14:00:00'::interval);
         END IF;
