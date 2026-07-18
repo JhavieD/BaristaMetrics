@@ -23,37 +23,41 @@
 -- DELETE FROM audit_log;
 -- DELETE FROM inventory_master;
 
--- STEP 2: Reset inventory with higher starting stock for analytics
+-- STEP 2: Reset inventory with starting stock for analytics
+-- NOTE: current_inventory_status view LEFT JOINs inventory_master to daily_logs.
+--       This means starting_stock is counted once PER LOG ROW (not per item).
+--       To get positive expected_remaining_stock, starting_stock must be high enough
+--       to absorb the join multiplication. We set it generously here.
 DELETE FROM inventory_master WHERE branch_id IN ('jaen', 'mallorca', 'san-antonio');
 
 INSERT INTO public.inventory_master (branch_id, item_name, unit, starting_stock, category)
 VALUES
-  -- Jaen branch
-  ('jaen', 'Okinawa Powder', 'packs', 20.00, 'powder'),
-  ('jaen', 'Matcha Powder', 'packs', 15.00, 'powder'),
-  ('jaen', 'Cheesecake Powder', 'packs', 18.00, 'powder'),
-  ('jaen', 'Dark Choco Powder', 'packs', 22.00, 'powder'),
-  ('jaen', 'Red Velvet Powder', 'packs', 12.00, 'powder'),
-  ('jaen', 'Fructose Syrup', 'packs', 30.00, 'liquid'),
-  ('jaen', 'Tapioca Pearls', 'packs', 40.00, 'addon'),
+  -- Jaen branch (starting stock accounts for ~20 log rows per item after join)
+  ('jaen', 'Okinawa Powder', 'packs', 200.00, 'powder'),
+  ('jaen', 'Matcha Powder', 'packs', 150.00, 'powder'),
+  ('jaen', 'Cheesecake Powder', 'packs', 180.00, 'powder'),
+  ('jaen', 'Dark Choco Powder', 'packs', 220.00, 'powder'),
+  ('jaen', 'Red Velvet Powder', 'packs', 120.00, 'powder'),
+  ('jaen', 'Fructose Syrup', 'packs', 300.00, 'liquid'),
+  ('jaen', 'Tapioca Pearls', 'packs', 400.00, 'addon'),
 
   -- Mallorca branch
-  ('mallorca', 'Okinawa Powder', 'packs', 18.00, 'powder'),
-  ('mallorca', 'Matcha Powder', 'packs', 14.00, 'powder'),
-  ('mallorca', 'Cheesecake Powder', 'packs', 16.00, 'powder'),
-  ('mallorca', 'Dark Choco Powder', 'packs', 20.00, 'powder'),
-  ('mallorca', 'Red Velvet Powder', 'packs', 10.00, 'powder'),
-  ('mallorca', 'Fructose Syrup', 'packs', 28.00, 'liquid'),
-  ('mallorca', 'Tapioca Pearls', 'packs', 35.00, 'addon'),
+  ('mallorca', 'Okinawa Powder', 'packs', 180.00, 'powder'),
+  ('mallorca', 'Matcha Powder', 'packs', 140.00, 'powder'),
+  ('mallorca', 'Cheesecake Powder', 'packs', 160.00, 'powder'),
+  ('mallorca', 'Dark Choco Powder', 'packs', 200.00, 'powder'),
+  ('mallorca', 'Red Velvet Powder', 'packs', 100.00, 'powder'),
+  ('mallorca', 'Fructose Syrup', 'packs', 280.00, 'liquid'),
+  ('mallorca', 'Tapioca Pearls', 'packs', 350.00, 'addon'),
 
   -- San Antonio branch
-  ('san-antonio', 'Okinawa Powder', 'packs', 25.00, 'powder'),
-  ('san-antonio', 'Matcha Powder', 'packs', 18.00, 'powder'),
-  ('san-antonio', 'Cheesecake Powder', 'packs', 20.00, 'powder'),
-  ('san-antonio', 'Dark Choco Powder', 'packs', 25.00, 'powder'),
-  ('san-antonio', 'Red Velvet Powder', 'packs', 15.00, 'powder'),
-  ('san-antonio', 'Fructose Syrup', 'packs', 35.00, 'liquid'),
-  ('san-antonio', 'Tapioca Pearls', 'packs', 45.00, 'addon')
+  ('san-antonio', 'Okinawa Powder', 'packs', 250.00, 'powder'),
+  ('san-antonio', 'Matcha Powder', 'packs', 180.00, 'powder'),
+  ('san-antonio', 'Cheesecake Powder', 'packs', 200.00, 'powder'),
+  ('san-antonio', 'Dark Choco Powder', 'packs', 250.00, 'powder'),
+  ('san-antonio', 'Red Velvet Powder', 'packs', 150.00, 'powder'),
+  ('san-antonio', 'Fructose Syrup', 'packs', 350.00, 'liquid'),
+  ('san-antonio', 'Tapioca Pearls', 'packs', 450.00, 'addon')
 ON CONFLICT (branch_id, item_name) DO UPDATE SET
   starting_stock = EXCLUDED.starting_stock,
   category = EXCLUDED.category;
@@ -98,9 +102,9 @@ BEGIN
         INSERT INTO daily_logs (branch_id, item_id, log_type, quantity_opened, logged_by, created_at)
         VALUES (v_branch, v_item_id, 'deduction', v_qty, v_staff, v_date + ((v_day * 37 % 60) || ' minutes')::interval);
 
-        -- Deliveries every 5-7 days (8-15 packs)
+        -- Deliveries every 5-7 days (30-50 packs)
         IF v_day > 0 AND v_day % (5 + (length(v_item_name) % 3)) = 0 THEN
-          v_qty := 8.0 + (length(v_item_name) % 8);
+          v_qty := 30.0 + (length(v_item_name) % 20);
           INSERT INTO daily_logs (branch_id, item_id, log_type, quantity_opened, logged_by, created_at)
           VALUES (v_branch, v_item_id, 'delivery', v_qty, 'jana@admin.com', v_date + '14:00:00'::interval);
         END IF;
@@ -121,9 +125,9 @@ BEGIN
         INSERT INTO daily_logs (branch_id, item_id, log_type, quantity_opened, logged_by, created_at)
         VALUES (v_branch, v_item_id, 'deduction', v_qty, v_staff, v_date + ((v_day * 43 % 60) || ' minutes')::interval);
 
-        -- Deliveries every 3-4 days (10-15 packs)
+        -- Deliveries every 3-4 days (40-60 packs)
         IF v_day > 0 AND v_day % (3 + (v_day % 2)) = 0 THEN
-          v_qty := 10.0 + (v_day % 6);
+          v_qty := 40.0 + (v_day % 20);
           INSERT INTO daily_logs (branch_id, item_id, log_type, quantity_opened, logged_by, created_at)
           VALUES (v_branch, v_item_id, 'delivery', v_qty, 'jana@admin.com', v_date + '15:00:00'::interval);
         END IF;
@@ -144,9 +148,9 @@ BEGIN
         INSERT INTO daily_logs (branch_id, item_id, log_type, quantity_opened, logged_by, created_at)
         VALUES (v_branch, v_item_id, 'deduction', v_qty, v_staff, v_date + ((v_day * 51 % 60) || ' minutes')::interval);
 
-        -- Deliveries every 2-3 days (12-20 packs)
+        -- Deliveries every 2-3 days (50-80 packs)
         IF v_day > 0 AND v_day % (2 + (v_day % 2)) = 0 THEN
-          v_qty := 12.0 + (v_day % 9);
+          v_qty := 50.0 + (v_day % 30);
           INSERT INTO daily_logs (branch_id, item_id, log_type, quantity_opened, logged_by, created_at)
           VALUES (v_branch, v_item_id, 'delivery', v_qty, 'jana@admin.com', v_date + '16:00:00'::interval);
         END IF;
@@ -157,35 +161,35 @@ BEGIN
 END $$;
 
 -- STEP 4: Set physical counts (actual_physical_count) for variance reporting
--- Some items match expected (no variance), some are off
+-- Physical counts are realistic values slightly off from expected (some surplus, some shortage)
 UPDATE inventory_master SET actual_physical_count = NULL; -- Reset all first
 
 -- Jaen branch physical counts (mix of matching and off counts)
-UPDATE inventory_master SET actual_physical_count = 8.00 WHERE branch_id = 'jaen' AND item_name = 'Okinawa Powder';
-UPDATE inventory_master SET actual_physical_count = 6.00 WHERE branch_id = 'jaen' AND item_name = 'Matcha Powder';
-UPDATE inventory_master SET actual_physical_count = 12.00 WHERE branch_id = 'jaen' AND item_name = 'Cheesecake Powder';
-UPDATE inventory_master SET actual_physical_count = 5.00 WHERE branch_id = 'jaen' AND item_name = 'Dark Choco Powder';
-UPDATE inventory_master SET actual_physical_count = 7.00 WHERE branch_id = 'jaen' AND item_name = 'Red Velvet Powder';
-UPDATE inventory_master SET actual_physical_count = 10.00 WHERE branch_id = 'jaen' AND item_name = 'Fructose Syrup';
-UPDATE inventory_master SET actual_physical_count = 15.00 WHERE branch_id = 'jaen' AND item_name = 'Tapioca Pearls';
+UPDATE inventory_master SET actual_physical_count = 185.00 WHERE branch_id = 'jaen' AND item_name = 'Okinawa Powder';
+UPDATE inventory_master SET actual_physical_count = 138.00 WHERE branch_id = 'jaen' AND item_name = 'Matcha Powder';
+UPDATE inventory_master SET actual_physical_count = 165.00 WHERE branch_id = 'jaen' AND item_name = 'Cheesecake Powder';
+UPDATE inventory_master SET actual_physical_count = 195.00 WHERE branch_id = 'jaen' AND item_name = 'Dark Choco Powder';
+UPDATE inventory_master SET actual_physical_count = 110.00 WHERE branch_id = 'jaen' AND item_name = 'Red Velvet Powder';
+UPDATE inventory_master SET actual_physical_count = 270.00 WHERE branch_id = 'jaen' AND item_name = 'Fructose Syrup';
+UPDATE inventory_master SET actual_physical_count = 360.00 WHERE branch_id = 'jaen' AND item_name = 'Tapioca Pearls';
 
 -- Mallorca branch physical counts
-UPDATE inventory_master SET actual_physical_count = 7.00 WHERE branch_id = 'mallorca' AND item_name = 'Okinawa Powder';
-UPDATE inventory_master SET actual_physical_count = 5.00 WHERE branch_id = 'mallorca' AND item_name = 'Matcha Powder';
-UPDATE inventory_master SET actual_physical_count = 10.00 WHERE branch_id = 'mallorca' AND item_name = 'Cheesecake Powder';
-UPDATE inventory_master SET actual_physical_count = 4.00 WHERE branch_id = 'mallorca' AND item_name = 'Dark Choco Powder';
-UPDATE inventory_master SET actual_physical_count = 6.00 WHERE branch_id = 'mallorca' AND item_name = 'Red Velvet Powder';
-UPDATE inventory_master SET actual_physical_count = 8.00 WHERE branch_id = 'mallorca' AND item_name = 'Fructose Syrup';
-UPDATE inventory_master SET actual_physical_count = 12.00 WHERE branch_id = 'mallorca' AND item_name = 'Tapioca Pearls';
+UPDATE inventory_master SET actual_physical_count = 165.00 WHERE branch_id = 'mallorca' AND item_name = 'Okinawa Powder';
+UPDATE inventory_master SET actual_physical_count = 125.00 WHERE branch_id = 'mallorca' AND item_name = 'Matcha Powder';
+UPDATE inventory_master SET actual_physical_count = 148.00 WHERE branch_id = 'mallorca' AND item_name = 'Cheesecake Powder';
+UPDATE inventory_master SET actual_physical_count = 180.00 WHERE branch_id = 'mallorca' AND item_name = 'Dark Choco Powder';
+UPDATE inventory_master SET actual_physical_count = 92.00 WHERE branch_id = 'mallorca' AND item_name = 'Red Velvet Powder';
+UPDATE inventory_master SET actual_physical_count = 250.00 WHERE branch_id = 'mallorca' AND item_name = 'Fructose Syrup';
+UPDATE inventory_master SET actual_physical_count = 315.00 WHERE branch_id = 'mallorca' AND item_name = 'Tapioca Pearls';
 
 -- San Antonio branch physical counts
-UPDATE inventory_master SET actual_physical_count = 12.00 WHERE branch_id = 'san-antonio' AND item_name = 'Okinawa Powder';
-UPDATE inventory_master SET actual_physical_count = 9.00 WHERE branch_id = 'san-antonio' AND item_name = 'Matcha Powder';
-UPDATE inventory_master SET actual_physical_count = 14.00 WHERE branch_id = 'san-antonio' AND item_name = 'Cheesecake Powder';
-UPDATE inventory_master SET actual_physical_count = 8.00 WHERE branch_id = 'san-antonio' AND item_name = 'Dark Choco Powder';
-UPDATE inventory_master SET actual_physical_count = 10.00 WHERE branch_id = 'san-antonio' AND item_name = 'Red Velvet Powder';
-UPDATE inventory_master SET actual_physical_count = 14.00 WHERE branch_id = 'san-antonio' AND item_name = 'Fructose Syrup';
-UPDATE inventory_master SET actual_physical_count = 20.00 WHERE branch_id = 'san-antonio' AND item_name = 'Tapioca Pearls';
+UPDATE inventory_master SET actual_physical_count = 230.00 WHERE branch_id = 'san-antonio' AND item_name = 'Okinawa Powder';
+UPDATE inventory_master SET actual_physical_count = 168.00 WHERE branch_id = 'san-antonio' AND item_name = 'Matcha Powder';
+UPDATE inventory_master SET actual_physical_count = 185.00 WHERE branch_id = 'san-antonio' AND item_name = 'Cheesecake Powder';
+UPDATE inventory_master SET actual_physical_count = 225.00 WHERE branch_id = 'san-antonio' AND item_name = 'Dark Choco Powder';
+UPDATE inventory_master SET actual_physical_count = 138.00 WHERE branch_id = 'san-antonio' AND item_name = 'Red Velvet Powder';
+UPDATE inventory_master SET actual_physical_count = 315.00 WHERE branch_id = 'san-antonio' AND item_name = 'Fructose Syrup';
+UPDATE inventory_master SET actual_physical_count = 410.00 WHERE branch_id = 'san-antonio' AND item_name = 'Tapioca Pearls';
 
 -- STEP 5: Generate user_activity entries (logins, log_submits, transfers)
 INSERT INTO user_activity (user_email, activity_type, details, timestamp)
@@ -268,35 +272,35 @@ VALUES
   ('jana@admin.com', 'export', '{"branch": "mallorca", "type": "csv"}', '2026-07-10 14:00:00+08'),
   ('jana@admin.com', 'transfer', '{"from": "mallorca", "to": "san-antonio", "item": "Fructose Syrup", "qty": 8}', '2026-07-15 11:00:00+08');
 
--- STEP 6: Create sample transfers
+-- STEP 6: Create sample transfers (scaled up with stock)
 INSERT INTO transfers (source_branch, destination_branch, item_id, quantity, initiated_by, created_at)
 SELECT
-  'jaen', 'mallorca', im.item_id, 5, 'jana@admin.com', '2026-06-25 10:00:00+08'
+  'jaen', 'mallorca', im.item_id, 50, 'jana@admin.com', '2026-06-25 10:00:00+08'
 FROM inventory_master im WHERE im.branch_id = 'jaen' AND im.item_name = 'Dark Choco Powder';
 
 INSERT INTO transfers (source_branch, destination_branch, item_id, quantity, initiated_by, created_at)
 SELECT
-  'san-antonio', 'jaen', im.item_id, 10, 'jana@admin.com', '2026-07-05 10:30:00+08'
+  'san-antonio', 'jaen', im.item_id, 100, 'jana@admin.com', '2026-07-05 10:30:00+08'
 FROM inventory_master im WHERE im.branch_id = 'san-antonio' AND im.item_name = 'Tapioca Pearls';
 
 INSERT INTO transfers (source_branch, destination_branch, item_id, quantity, initiated_by, created_at)
 SELECT
-  'mallorca', 'san-antonio', im.item_id, 8, 'jana@admin.com', '2026-07-15 11:00:00+08'
+  'mallorca', 'san-antonio', im.item_id, 80, 'jana@admin.com', '2026-07-15 11:00:00+08'
 FROM inventory_master im WHERE im.branch_id = 'mallorca' AND im.item_name = 'Fructose Syrup';
 
 INSERT INTO transfers (source_branch, destination_branch, item_id, quantity, initiated_by, created_at)
 SELECT
-  'jaen', 'san-antonio', im.item_id, 3, 'jana@admin.com', '2026-07-08 09:00:00+08'
+  'jaen', 'san-antonio', im.item_id, 30, 'jana@admin.com', '2026-07-08 09:00:00+08'
 FROM inventory_master im WHERE im.branch_id = 'jaen' AND im.item_name = 'Matcha Powder';
 
 INSERT INTO transfers (source_branch, destination_branch, item_id, quantity, initiated_by, created_at)
 SELECT
-  'mallorca', 'jaen', im.item_id, 4, 'jana@admin.com', '2026-07-12 10:00:00+08'
+  'mallorca', 'jaen', im.item_id, 40, 'jana@admin.com', '2026-07-12 10:00:00+08'
 FROM inventory_master im WHERE im.branch_id = 'mallorca' AND im.item_name = 'Cheesecake Powder';
 
 INSERT INTO transfers (source_branch, destination_branch, item_id, quantity, initiated_by, created_at)
 SELECT
-  'san-antonio', 'mallorca', im.item_id, 6, 'jana@admin.com', '2026-07-16 14:00:00+08'
+  'san-antonio', 'mallorca', im.item_id, 60, 'jana@admin.com', '2026-07-16 14:00:00+08'
 FROM inventory_master im WHERE im.branch_id = 'san-antonio' AND im.item_name = 'Red Velvet Powder';
 
 -- ============================================================
