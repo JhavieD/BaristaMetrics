@@ -54,6 +54,21 @@ export function errorResponse(
     );
   }
 
+  // Handle Supabase PostgrestError or similar objects
+  if (error && typeof error === "object" && "message" in error) {
+    const msg = String((error as { message: unknown }).message);
+    const code = "code" in error ? String((error as { code: unknown }).code) : "INTERNAL_SERVER_ERROR";
+    console.error("API Error:", { requestId: id, code, message: msg });
+    return NextResponse.json(
+      {
+        success: false,
+        error: { code, message: process.env.NODE_ENV === "production" ? "Internal server error" : msg },
+        metadata: { timestamp, requestId: id, version: APP_VERSION },
+      },
+      { status: 500 }
+    );
+  }
+
   return NextResponse.json(
     {
       success: false,

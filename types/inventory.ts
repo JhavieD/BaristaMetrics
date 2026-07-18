@@ -1,13 +1,16 @@
 export type LogType = "deduction" | "delivery";
 
-export type BranchId = "jaen" | "ktown";
+export type BranchId = "jaen" | "mallorca" | "san-antonio";
 
 export type Unit = "kg" | "grams" | "packs";
+
+export type ItemCategory = "powder" | "liquid" | "addon";
 
 export interface InventoryItem {
   item_id: number;
   branch_id: BranchId;
   item_name: string;
+  category: ItemCategory;
   unit: Unit;
   starting_stock: number;
   actual_physical_count: number | null;

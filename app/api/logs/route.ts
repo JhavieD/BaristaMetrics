@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { successResponse, errorResponse } from "@/lib/middleware/error-handler";
+import { withApi } from "@/lib/middleware/api-wrapper";
 
-export async function GET(request: NextRequest) {
+export const GET = withApi(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const branch = searchParams.get("branch");
@@ -26,4 +27,4 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return errorResponse(error);
   }
-}
+});

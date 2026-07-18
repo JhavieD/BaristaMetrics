@@ -3,8 +3,9 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { getAuthUser } from "@/lib/supabase/middleware";
 import { logSubmissionSchema } from "@/lib/validations/inventory";
 import { successResponse, errorResponse } from "@/lib/middleware/error-handler";
+import { withApi } from "@/lib/middleware/api-wrapper";
 
-export async function POST(request: NextRequest) {
+export const POST = withApi(async (request: NextRequest) => {
   try {
     const user = await getAuthUser(request);
     const body = await request.json();
@@ -27,4 +28,4 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return errorResponse(error);
   }
-}
+});

@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { ALLOWED_BRANCHES } from "@/lib/utils/constants";
 import type { BranchId } from "@/types/inventory";
+
+const BRANCH_LABELS: Record<BranchId, string> = {
+  jaen: "Jaen",
+  mallorca: "Mallorca",
+  "san-antonio": "San Antonio",
+};
 
 export function BranchToggle({
   onChange,
@@ -17,7 +24,7 @@ export function BranchToggle({
 
   return (
     <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
-      {(["jaen", "ktown"] as BranchId[]).map((b) => (
+      {ALLOWED_BRANCHES.map((b) => (
         <button
           key={b}
           onClick={() => handleSwitch(b)}
@@ -27,7 +34,7 @@ export function BranchToggle({
               : "text-gray-500 hover:text-gray-700"
           }`}
         >
-          {b.charAt(0).toUpperCase() + b.slice(1)}
+          {BRANCH_LABELS[b]}
         </button>
       ))}
     </div>

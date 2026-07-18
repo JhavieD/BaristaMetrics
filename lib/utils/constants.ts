@@ -1,10 +1,12 @@
-export const ALLOWED_BRANCHES = ["jaen", "ktown"] as const;
+export const ALLOWED_BRANCHES = ["jaen", "mallorca", "san-antonio"] as const;
 
-export const ADMIN_EMAIL = "jana@gmail.com";
+export const ADMIN_EMAIL = "jana@admin.com";
 
 export const LOG_TYPES = ["deduction", "delivery"] as const;
 
 export const VALID_UNITS = ["kg", "grams", "packs"] as const;
+
+export const CATEGORIES = ["powder", "liquid", "addon"] as const;
 
 export const DEFAULT_BRANCH = "jaen";
 
