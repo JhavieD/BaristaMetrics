@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabase } from "@/lib/supabase/client";
 import { logSubmissionSchema } from "@/lib/validations/inventory";
 import { logActivity } from "@/lib/utils/activity";
 import { LOG_TYPES, ALLOWED_BRANCHES, CATEGORIES } from "@/lib/utils/constants";
@@ -37,7 +37,7 @@ export function StaffLogForm() {
 
   useEffect(() => {
     async function loadBranch() {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSupabase().auth.getSession();
       if (session) {
         const userBranch = session.user.user_metadata?.branch_id as BranchId | undefined;
         if (userBranch) {
@@ -54,7 +54,7 @@ export function StaffLogForm() {
   useEffect(() => {
     if (!branch) return;
     async function fetchItems() {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from("current_inventory_status")
         .select("*")
         .eq("branch_id", branch)
@@ -71,7 +71,7 @@ export function StaffLogForm() {
     setLoading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSupabase().auth.getSession();
       if (!session) throw new Error("Not logged in");
 
       const parsed = logSubmissionSchema.parse({
@@ -82,7 +82,7 @@ export function StaffLogForm() {
         unit: "packs",
       });
 
-      const { error: insertError } = await supabase.from("daily_logs").insert({
+      const { error: insertError } = await getSupabase().from("daily_logs").insert({
         branch_id: parsed.branch_id,
         item_id: parsed.item_id,
         log_type: parsed.log_type,

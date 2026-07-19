@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabase } from "@/lib/supabase/client";
 import { loginSchema } from "@/lib/validations/inventory";
 import { ADMIN_EMAIL } from "@/lib/utils/constants";
 import { logActivity } from "@/lib/utils/activity";
@@ -21,7 +21,7 @@ export default function LoginPage() {
 
     try {
       const parsed = loginSchema.parse({ email, password });
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const { error: authError } = await getSupabase().auth.signInWithPassword({
         email: parsed.email,
         password: parsed.password,
       });

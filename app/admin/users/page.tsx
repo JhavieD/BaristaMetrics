@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -32,7 +32,7 @@ function useStaffUsers() {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSupabase().auth.getSession();
       const res = await fetch("/api/users", {
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
@@ -68,7 +68,7 @@ export default function UsersPage() {
     setInviting(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSupabase().auth.getSession();
       const res = await fetch("/api/users", {
         method: "POST",
         headers: {
@@ -97,7 +97,7 @@ export default function UsersPage() {
     setDeleting(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSupabase().auth.getSession();
       const res = await fetch(`/api/users/${deleteTarget.id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${session?.access_token}` },
@@ -116,7 +116,7 @@ export default function UsersPage() {
   async function saveBranch(userId: string) {
     setSavingBranch(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSupabase().auth.getSession();
       const res = await fetch(`/api/users/${userId}`, {
         method: "PUT",
         headers: {

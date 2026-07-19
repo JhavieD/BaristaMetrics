@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabase } from "@/lib/supabase/client";
 import { useRealtime } from "@/hooks/useRealtime";
 import { Button } from "@/components/ui/Button";
 import { LoadingSkeleton } from "@/components/modals/LoadingSkeleton";
@@ -136,7 +136,7 @@ export function InventoryGrid() {
   }
 
   const refresh = useCallback(async () => {
-    const { data } = await supabase
+    const { data } = await getSupabase()
       .from("current_inventory_status")
       .select("*")
       .eq("branch_id", branch)
@@ -155,7 +155,7 @@ export function InventoryGrid() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from("current_inventory_status")
         .select("*")
         .eq("branch_id", branch)
@@ -173,7 +173,7 @@ export function InventoryGrid() {
     if (!newItemName.trim()) return;
     setAddingItem(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSupabase().auth.getSession();
       const res = await fetch("/api/inventory", {
         method: "POST",
         headers: {
@@ -207,7 +207,7 @@ export function InventoryGrid() {
     setSaving(true);
     try {
       const count = physicalCount === "" ? null : parseFloat(physicalCount);
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from("inventory_master")
         .update({ actual_physical_count: count })
         .eq("item_id", itemId);
@@ -241,7 +241,7 @@ export function InventoryGrid() {
     if (!editName.trim()) return;
     setUpdatingItem(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSupabase().auth.getSession();
       const res = await fetch(`/api/inventory/${itemId}`, {
         method: "PUT",
         headers: {
@@ -267,7 +267,7 @@ export function InventoryGrid() {
   }
 
   async function fetchDeleteLogCount(item: InventoryStatus) {
-    const { count } = await supabase
+    const { count } = await getSupabase()
       .from("daily_logs")
       .select("log_id", { count: "exact", head: true })
       .eq("item_id", item.item_id)
@@ -279,7 +279,7 @@ export function InventoryGrid() {
   async function deleteItem(itemId: number) {
     setDeleting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSupabase().auth.getSession();
       const res = await fetch(`/api/inventory/${itemId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${session?.access_token}` },

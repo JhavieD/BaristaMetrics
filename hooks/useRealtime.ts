@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback, useState } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabase } from "@/lib/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 type RealtimeEvent = "INSERT" | "UPDATE" | "DELETE" | "*";
@@ -24,7 +24,7 @@ export function useRealtime({ table, event = "*", filter, onChanges, enabled = t
   const subscribe = useCallback(() => {
     if (!enabled || !onChanges) return;
 
-    const channel = supabase
+    const channel = getSupabase()
       .channel(`realtime:${table}`)
       .on(
         "postgres_changes",

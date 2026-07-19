@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabase } from "@/lib/supabase/client";
 import { LoadingSkeleton } from "@/components/modals/LoadingSkeleton";
 import { useToast } from "@/components/ui/Toast";
 import { Pagination } from "@/components/ui/Pagination";
@@ -54,7 +54,7 @@ export default function AuditPage() {
   useEffect(() => {
     async function fetchLogs() {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await getSupabase().auth.getSession();
         const offset = (page - 1) * PAGE_SIZE;
         const res = await fetch(`/api/audit?offset=${offset}&limit=${PAGE_SIZE}`, {
           headers: { Authorization: `Bearer ${session?.access_token}` },

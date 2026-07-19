@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabase } from "@/lib/supabase/client";
 import type { InventoryStatus, BranchId } from "@/types/inventory";
 
 export function useInventory(branch: BranchId) {
@@ -15,7 +15,7 @@ export function useInventory(branch: BranchId) {
     async function fetchInventory() {
       setLoading(true);
       setError(null);
-      const { data, error: fetchError } = await supabase
+      const { data, error: fetchError } = await getSupabase()
         .from("current_inventory_status")
         .select("*")
         .eq("branch_id", branch)

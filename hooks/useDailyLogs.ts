@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabase } from "@/lib/supabase/client";
 import type { DailyLog, BranchId } from "@/types/inventory";
 
 export function useDailyLogs(branch?: BranchId) {
@@ -13,7 +13,7 @@ export function useDailyLogs(branch?: BranchId) {
 
     async function fetchLogs() {
       setLoading(true);
-      let query = supabase
+      let query = getSupabase()
         .from("daily_logs")
         .select("*, inventory_master(item_name, unit)")
         .order("created_at", { ascending: false })

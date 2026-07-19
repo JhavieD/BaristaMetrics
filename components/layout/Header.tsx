@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabase } from "@/lib/supabase/client";
 import { ADMIN_EMAIL } from "@/lib/utils/constants";
 import { logActivity } from "@/lib/utils/activity";
 import { useTheme } from "@/components/ThemeContext";
@@ -27,7 +27,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
 
   useEffect(() => {
     async function load() {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSupabase().auth.getSession();
       if (session) {
         setEmail(session.user.email || "");
         setIsAdmin(session.user.email === ADMIN_EMAIL);
@@ -38,7 +38,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
   }, []);
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
+    await getSupabase().auth.signOut();
     logActivity("logout");
     router.push("/login");
   }

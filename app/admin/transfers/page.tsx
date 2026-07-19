@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabase } from "@/lib/supabase/client";
 import { ALLOWED_BRANCHES } from "@/lib/utils/constants";
 import { logActivity } from "@/lib/utils/activity";
 import { transferSchema } from "@/lib/validations/inventory";
@@ -31,7 +31,7 @@ export default function TransfersPage() {
 
   useEffect(() => {
     async function fetchItems() {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from("current_inventory_status")
         .select("*")
         .eq("branch_id", sourceBranch)
@@ -44,7 +44,7 @@ export default function TransfersPage() {
 
   useEffect(() => {
     async function fetchTransfers() {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from("transfers")
         .select("*, inventory_master(item_name, unit)")
         .order("created_at", { ascending: false })
@@ -68,7 +68,7 @@ export default function TransfersPage() {
         quantity: parseFloat(quantity),
       });
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSupabase().auth.getSession();
 
       const res = await fetch("/api/transfers", {
         method: "POST",
@@ -86,7 +86,7 @@ export default function TransfersPage() {
       logActivity("transfer", { source: sourceBranch, destination: destBranch, item: parseInt(itemId), quantity: parseFloat(quantity) });
       setQuantity("");
       setItemId("");
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from("transfers")
         .select("*, inventory_master(item_name, unit)")
         .order("created_at", { ascending: false })

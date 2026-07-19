@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { BranchToggle } from "@/components/dashboard/BranchToggle";
 import { LoadingSkeleton } from "@/components/modals/LoadingSkeleton";
@@ -52,7 +52,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     async function fetchAnalytics() {
       setLoading(true);
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from("current_inventory_status")
         .select("*")
         .eq("branch_id", branch)

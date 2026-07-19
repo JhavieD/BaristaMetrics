@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import type { BranchId } from "@/types/inventory";
 
@@ -22,7 +22,7 @@ export function AIForensicButton({ branch }: { branch: BranchId }) {
     setResult(null);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSupabase().auth.getSession();
       const res = await fetch("/api/audit", {
         method: "POST",
         headers: {

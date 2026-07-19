@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
+import { getSupabase } from "@/lib/supabase/client";
 import { ADMIN_EMAIL } from "@/lib/utils/constants";
 
 export default function Home() {
@@ -10,7 +10,7 @@ export default function Home() {
 
   useEffect(() => {
     async function checkSession() {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await getSupabase().auth.getSession();
       if (session) {
         const redirectPath = session.user.email === ADMIN_EMAIL ? "/admin" : "/staff";
         router.push(redirectPath);

@@ -10,5 +10,3 @@ export function getSupabase(): SupabaseClient {
   }
   return supabaseInstance;
 }
-
-export const supabase = getSupabase();
