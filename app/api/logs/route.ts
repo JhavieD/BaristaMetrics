@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { successResponse, errorResponse } from "@/lib/middleware/error-handler";
 import { withApi } from "@/lib/middleware/api-wrapper";
 
@@ -11,7 +11,7 @@ export const GET = withApi(async (request: NextRequest) => {
     const limit = parseInt(searchParams.get("limit") || "25");
     const offset = parseInt(searchParams.get("offset") || "0");
 
-    let query = supabaseAdmin
+    let query = getSupabaseAdmin()
       .from("daily_logs")
       .select("*, inventory_master(item_name, unit)")
       .order("created_at", { ascending: false })

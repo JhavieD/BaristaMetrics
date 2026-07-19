@@ -56,7 +56,7 @@ function createMockQueryChain(result: { data: unknown; error: null | { message: 
   );
   chain.single = jest.fn(() => Promise.resolve(result));
   chain.maybeSingle = jest.fn(() => Promise.resolve(result));
-  chain.then = (resolve: (...args: unknown[]) => unknown) =>
+  (chain as Record<string, unknown>).then = (resolve: (...args: unknown[]) => unknown) =>
     resolve({ data: result.data, error: result.error, count: 0 });
   return chain;
 }

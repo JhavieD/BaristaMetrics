@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { getAuthUser } from "@/lib/supabase/middleware";
 import { logSubmissionSchema } from "@/lib/validations/inventory";
 import { successResponse, errorResponse } from "@/lib/middleware/error-handler";
@@ -11,7 +11,7 @@ export const POST = withApi(async (request: NextRequest) => {
     const body = await request.json();
     const parsed = logSubmissionSchema.parse(body);
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from("daily_logs")
       .insert({
         branch_id: parsed.branch_id,

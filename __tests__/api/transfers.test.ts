@@ -22,7 +22,7 @@ jest.mock("@/lib/middleware/security-headers", () => ({
 }));
 
 jest.mock("@/lib/supabase/server", () => ({
-  supabaseAdmin: { from: jest.fn() },
+  getSupabaseAdmin: jest.fn().mockReturnValue({ from: jest.fn() }),
 }));
 
 jest.mock("@/lib/supabase/middleware", () => ({
@@ -31,7 +31,7 @@ jest.mock("@/lib/supabase/middleware", () => ({
   isAdmin: jest.fn().mockReturnValue(true),
 }));
 
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { POST } from "@/app/api/transfers/route";
 
 function createMockQuery(result: {
@@ -59,7 +59,7 @@ function createMockQuery(result: {
   mock.maybeSingle = jest.fn(() =>
     Promise.resolve({ data: result.data, error: result.error })
   );
-  mock.then = (resolve: (...args: unknown[]) => unknown) =>
+  (mock as Record<string, unknown>).then = (resolve: (...args: unknown[]) => unknown) =>
     resolve({
       data: result.data,
       error: result.error,
@@ -96,7 +96,7 @@ describe("POST /api/transfers", () => {
       createMockQuery({ data: null, error: null }),
     ];
 
-    (supabaseAdmin.from as jest.Mock).mockImplementation(() => {
+    (getSupabaseAdmin().from as jest.Mock).mockImplementation(() => {
       return fromCalls[callIndex++] || createMockQuery({ data: null, error: null });
     });
 
@@ -141,7 +141,7 @@ describe("POST /api/transfers", () => {
 
   it("rejects transfer when source has insufficient stock", async () => {
     let callIndex = 0;
-    (supabaseAdmin.from as jest.Mock).mockImplementation(() => {
+    (getSupabaseAdmin().from as jest.Mock).mockImplementation(() => {
       if (callIndex === 0) {
         callIndex++;
         return createMockQuery({

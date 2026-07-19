@@ -22,7 +22,7 @@ jest.mock("@/lib/middleware/security-headers", () => ({
 }));
 
 jest.mock("@/lib/supabase/server", () => ({
-  supabaseAdmin: { from: jest.fn() },
+  getSupabaseAdmin: jest.fn().mockReturnValue({ from: jest.fn() }),
 }));
 
 jest.mock("@/lib/supabase/middleware", () => ({
@@ -31,7 +31,7 @@ jest.mock("@/lib/supabase/middleware", () => ({
   isAdmin: jest.fn().mockReturnValue(true),
 }));
 
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { GET, POST } from "@/app/api/inventory/route";
 import { PUT, DELETE } from "@/app/api/inventory/[itemId]/route";
 
@@ -56,13 +56,13 @@ function createMockQuery(result: {
   });
   mock.single = jest.fn(() => Promise.resolve({ data: result.data, error: result.error }));
   mock.maybeSingle = jest.fn(() => Promise.resolve({ data: result.data, error: result.error }));
-  mock.then = (resolve: (...args: unknown[]) => unknown) =>
+  (mock as Record<string, unknown>).then = (resolve: (...args: unknown[]) => unknown) =>
     resolve({ data: result.data, error: result.error, count: result.count ?? 0 });
   return mock;
 }
 
 function mockFrom(returnQuery: ReturnType<typeof createMockQuery>) {
-  (supabaseAdmin.from as jest.Mock).mockReturnValue(returnQuery);
+  (getSupabaseAdmin().from as jest.Mock).mockReturnValue(returnQuery);
 }
 
 beforeEach(() => {
@@ -81,7 +81,7 @@ describe("GET /api/inventory", () => {
     const response = await GET(request);
     const body = await response.json();
 
-    expect(supabaseAdmin.from).toHaveBeenCalledWith("current_inventory_status");
+    expect(getSupabaseAdmin().from).toHaveBeenCalledWith("current_inventory_status");
     expect(query.select).toHaveBeenCalledWith("*");
     expect(query.order).toHaveBeenCalledWith("item_name");
     expect(body.success).toBe(true);
@@ -142,7 +142,7 @@ describe("POST /api/inventory", () => {
     const response = await POST(request);
     const body = await response.json();
 
-    expect(supabaseAdmin.from).toHaveBeenCalledWith("inventory_master");
+    expect(getSupabaseAdmin().from).toHaveBeenCalledWith("inventory_master");
     expect(query.insert).toHaveBeenCalledWith({
       branch_id: "jaen",
       item_name: "Oat Milk",
@@ -177,7 +177,7 @@ describe("PUT /api/inventory/[itemId]", () => {
     });
     const body = await response.json();
 
-    expect(supabaseAdmin.from).toHaveBeenCalledWith("inventory_master");
+    expect(getSupabaseAdmin().from).toHaveBeenCalledWith("inventory_master");
     expect(query.update).toHaveBeenCalledWith({ item_name: "Updated Name" });
     expect(query.eq).toHaveBeenCalledWith("item_id", 5);
     expect(query.select).toHaveBeenCalled();
@@ -209,7 +209,7 @@ describe("DELETE /api/inventory/[itemId]", () => {
     const transfersQuery = createMockQuery({ data: null, error: null });
     const itemQuery = createMockQuery({ data: null, error: null });
 
-    (supabaseAdmin.from as jest.Mock).mockImplementation((table: string) => {
+    (getSupabaseAdmin().from as jest.Mock).mockImplementation((table: string) => {
       if (table === "daily_logs") return logsQuery;
       if (table === "transfers") return transfersQuery;
       return itemQuery;
@@ -224,15 +224,15 @@ describe("DELETE /api/inventory/[itemId]", () => {
     });
     const body = await response.json();
 
-    expect(supabaseAdmin.from).toHaveBeenCalledWith("daily_logs");
+    expect(getSupabaseAdmin().from).toHaveBeenCalledWith("daily_logs");
     expect(logsQuery.delete).toHaveBeenCalled();
     expect(logsQuery.eq).toHaveBeenCalledWith("item_id", 3);
 
-    expect(supabaseAdmin.from).toHaveBeenCalledWith("transfers");
+    expect(getSupabaseAdmin().from).toHaveBeenCalledWith("transfers");
     expect(transfersQuery.delete).toHaveBeenCalled();
     expect(transfersQuery.eq).toHaveBeenCalledWith("item_id", 3);
 
-    expect(supabaseAdmin.from).toHaveBeenCalledWith("inventory_master");
+    expect(getSupabaseAdmin().from).toHaveBeenCalledWith("inventory_master");
     expect(itemQuery.delete).toHaveBeenCalled();
     expect(itemQuery.eq).toHaveBeenCalledWith("item_id", 3);
 

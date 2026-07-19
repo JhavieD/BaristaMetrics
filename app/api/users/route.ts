@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/supabase/middleware";
 import { staffInviteSchema } from "@/lib/validations/inventory";
 import { successResponse, errorResponse } from "@/lib/middleware/error-handler";
@@ -10,7 +10,7 @@ export const GET = withApi(async (request: NextRequest) => {
   try {
     await requireAdmin(request);
 
-    const { data, error } = await supabaseAdmin.auth.admin.listUsers();
+    const { data, error } = await getSupabaseAdmin().auth.admin.listUsers();
     if (error) throw error;
 
     const users = data.users
@@ -35,7 +35,7 @@ export const POST = withApi(async (request: NextRequest) => {
     const body = await request.json();
     const parsed = staffInviteSchema.parse(body);
 
-    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+    const { data, error } = await getSupabaseAdmin().auth.admin.inviteUserByEmail(
       parsed.email,
       {
         redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/login`,

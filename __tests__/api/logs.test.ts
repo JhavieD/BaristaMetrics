@@ -22,10 +22,10 @@ jest.mock("@/lib/middleware/security-headers", () => ({
 }));
 
 jest.mock("@/lib/supabase/server", () => ({
-  supabaseAdmin: { from: jest.fn() },
+  getSupabaseAdmin: jest.fn().mockReturnValue({ from: jest.fn() }),
 }));
 
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { GET } from "@/app/api/logs/route";
 
 function createMockQuery(result: {
@@ -50,7 +50,7 @@ function createMockQuery(result: {
   mock.single = jest.fn(() =>
     Promise.resolve({ data: result.data, error: result.error })
   );
-  mock.then = (resolve: (...args: unknown[]) => unknown) =>
+  (mock as Record<string, unknown>).then = (resolve: (...args: unknown[]) => unknown) =>
     resolve({
       data: result.data,
       error: result.error,
@@ -60,7 +60,7 @@ function createMockQuery(result: {
 }
 
 function mockFrom(returnQuery: ReturnType<typeof createMockQuery>) {
-  (supabaseAdmin.from as jest.Mock).mockReturnValue(returnQuery);
+  (getSupabaseAdmin().from as jest.Mock).mockReturnValue(returnQuery);
 }
 
 beforeEach(() => {
@@ -86,7 +86,7 @@ describe("GET /api/logs", () => {
     const response = await GET(request);
     const body = await response.json();
 
-    expect(supabaseAdmin.from).toHaveBeenCalledWith("daily_logs");
+    expect(getSupabaseAdmin().from).toHaveBeenCalledWith("daily_logs");
     expect(query.select).toHaveBeenCalledWith(
       "*, inventory_master(item_name, unit)"
     );

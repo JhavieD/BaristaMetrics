@@ -2,11 +2,11 @@ import { isAdmin } from "@/lib/supabase/middleware";
 import { ADMIN_EMAIL } from "@/lib/utils/constants";
 
 jest.mock("@/lib/supabase/server", () => ({
-  supabaseAdmin: {
+  getSupabaseAdmin: jest.fn().mockReturnValue({
     auth: {
       getUser: jest.fn(),
     },
-  },
+  }),
 }));
 
 jest.mock("@/lib/utils/errors", () => ({

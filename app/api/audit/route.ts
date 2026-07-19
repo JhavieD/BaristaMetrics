@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { successResponse, errorResponse } from "@/lib/middleware/error-handler";
 import { withApi } from "@/lib/middleware/api-wrapper";
 
@@ -9,7 +9,7 @@ export const GET = withApi(async (request: NextRequest) => {
     const limit = parseInt(searchParams.get("limit") || "25");
     const offset = parseInt(searchParams.get("offset") || "0");
 
-    const { data, error, count } = await supabaseAdmin
+    const { data, error, count } = await getSupabaseAdmin()
       .from("audit_log")
       .select("*", { count: "exact" })
       .order("timestamp", { ascending: false })

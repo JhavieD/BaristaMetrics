@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/supabase/middleware";
 import { inventoryItemSchema } from "@/lib/validations/inventory";
 import { successResponse, errorResponse } from "@/lib/middleware/error-handler";
@@ -10,7 +10,7 @@ export const GET = withApi(async (request: NextRequest) => {
     const { searchParams } = new URL(request.url);
     const branch = searchParams.get("branch");
 
-    let query = supabaseAdmin
+    let query = getSupabaseAdmin()
       .from("current_inventory_status")
       .select("*")
       .order("item_name");
@@ -34,7 +34,7 @@ export const POST = withApi(async (request: NextRequest) => {
     const body = await request.json();
     const parsed = inventoryItemSchema.parse(body);
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from("inventory_master")
       .insert(parsed)
       .select()

@@ -1,7 +1,7 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 jest.mock("@/lib/supabase/server", () => ({
-  supabaseAdmin: {
+  getSupabaseAdmin: jest.fn().mockReturnValue({
     from: jest.fn(() => {
       const chain: Record<string, jest.Mock> = {};
       chain.select = jest.fn().mockReturnValue(chain);
@@ -16,7 +16,7 @@ jest.mock("@/lib/supabase/server", () => ({
       });
       return chain;
     }),
-  },
+  }),
 }));
 
 jest.mock("@/lib/supabase/middleware", () => ({
@@ -66,8 +66,8 @@ describe("Concurrent Submissions Load Test", () => {
     });
 
     const fulfilled = results.filter(
-      (r): r is PromiseFulfilledResult<Response> => r.status === "fulfilled"
-    );
+      (r) => r.status === "fulfilled"
+    ) as PromiseFulfilledResult<NextResponse<unknown>>[];
     fulfilled.forEach(({ value }) => {
       expect(value).toBeDefined();
       expect(value.status).toBeDefined();
@@ -86,8 +86,8 @@ describe("Concurrent Submissions Load Test", () => {
     });
 
     const fulfilled = results.filter(
-      (r): r is PromiseFulfilledResult<Response> => r.status === "fulfilled"
-    );
+      (r) => r.status === "fulfilled"
+    ) as PromiseFulfilledResult<NextResponse<unknown>>[];
     fulfilled.forEach(({ value }) => {
       expect(value).toBeDefined();
       expect(value.status).toBeDefined();
@@ -109,8 +109,8 @@ describe("Concurrent Submissions Load Test", () => {
     });
 
     const fulfilled = results.filter(
-      (r): r is PromiseFulfilledResult<Response> => r.status === "fulfilled"
-    );
+      (r) => r.status === "fulfilled"
+    ) as PromiseFulfilledResult<NextResponse<unknown>>[];
     fulfilled.forEach(({ value }) => {
       expect(value).toBeDefined();
       expect(value.status).toBeDefined();

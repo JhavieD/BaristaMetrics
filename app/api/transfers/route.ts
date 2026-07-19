@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/supabase/middleware";
 import { transferSchema } from "@/lib/validations/inventory";
 import { successResponse, errorResponse } from "@/lib/middleware/error-handler";
@@ -15,7 +15,7 @@ export const POST = withApi(async (request: NextRequest) => {
       return errorResponse(new Error("Source and destination must be different"));
     }
 
-    const { data: sourceItem, error: sourceError } = await supabaseAdmin
+    const { data: sourceItem, error: sourceError } = await getSupabaseAdmin()
       .from("current_inventory_status")
       .select("expected_remaining_stock")
       .eq("item_id", parsed.item_id)
@@ -27,13 +27,13 @@ export const POST = withApi(async (request: NextRequest) => {
       return errorResponse(new Error("Insufficient stock at source branch"));
     }
 
-    const { data: sourceMaster } = await supabaseAdmin
+    const { data: sourceMaster } = await getSupabaseAdmin()
       .from("inventory_master")
       .select("item_name, unit")
       .eq("item_id", parsed.item_id)
       .single();
 
-    const { data: destItem } = await supabaseAdmin
+    const { data: destItem } = await getSupabaseAdmin()
       .from("inventory_master")
       .select("item_id")
       .eq("branch_id", parsed.destination_branch)
@@ -41,7 +41,7 @@ export const POST = withApi(async (request: NextRequest) => {
       .maybeSingle();
 
     if (!destItem) {
-      await supabaseAdmin.from("inventory_master").insert({
+      await getSupabaseAdmin().from("inventory_master").insert({
         branch_id: parsed.destination_branch,
         item_name: sourceMaster!.item_name,
         unit: sourceMaster!.unit,
@@ -49,14 +49,14 @@ export const POST = withApi(async (request: NextRequest) => {
       });
     }
 
-    const { data: destMaster } = await supabaseAdmin
+    const { data: destMaster } = await getSupabaseAdmin()
       .from("inventory_master")
       .select("item_id")
       .eq("branch_id", parsed.destination_branch)
       .eq("item_name", sourceMaster!.item_name)
       .single();
 
-    const { data: transfer, error: transferError } = await supabaseAdmin
+    const { data: transfer, error: transferError } = await getSupabaseAdmin()
       .from("transfers")
       .insert({
         source_branch: parsed.source_branch,
@@ -70,7 +70,7 @@ export const POST = withApi(async (request: NextRequest) => {
 
     if (transferError) throw transferError;
 
-    await supabaseAdmin.from("daily_logs").insert([
+    await getSupabaseAdmin().from("daily_logs").insert([
       {
         branch_id: parsed.source_branch,
         item_id: parsed.item_id,

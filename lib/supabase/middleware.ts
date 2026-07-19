@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { AppError } from "@/lib/utils/errors";
 import { ADMIN_EMAIL } from "@/lib/utils/constants";
 
@@ -10,7 +10,7 @@ export async function getAuthUser(request: NextRequest) {
   }
 
   const token = authHeader.split(" ")[1];
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+  const { data: { user }, error } = await getSupabaseAdmin().auth.getUser(token);
 
   if (error || !user) {
     throw new AppError("UNAUTHORIZED", "Invalid or expired token", 401);

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/supabase/middleware";
 import { successResponse, errorResponse } from "@/lib/middleware/error-handler";
 import { withApi } from "@/lib/middleware/api-wrapper";
@@ -17,7 +17,7 @@ export const PUT = withApi(async (
       return errorResponse(new Error("branch_id is required"));
     }
 
-    const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
+    const { data, error } = await getSupabaseAdmin().auth.admin.updateUserById(
       userId,
       {
         user_metadata: {
@@ -41,7 +41,7 @@ export const DELETE = withApi(async (
     await requireAdmin(request);
     const { userId } = await context!.params;
 
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    const { error } = await getSupabaseAdmin().auth.admin.deleteUser(userId);
     if (error) throw error;
 
     return successResponse({ deleted: true });
